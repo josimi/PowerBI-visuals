@@ -39,7 +39,7 @@ module powerbi.visuals.sampleDataViews {
         public name: string = "SimpleDotPlotData";
         public displayName: string = "Simple DotPlot Data";
 
-        public visuals: string[] = ["dotPlot"];
+        public visuals: string[] = ["dotPlot", "villageChart"];
 
         private categoryValues = ['Betty', 'Mey', 'Nancy', 'Anna', 'Ben', 'David', 'Tim'];
 

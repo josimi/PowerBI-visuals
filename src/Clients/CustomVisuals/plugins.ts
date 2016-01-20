@@ -140,4 +140,10 @@ module powerbi.visuals.plugins {
         getSortableRoles: (visualSortableOptions?: VisualSortableOptions) => ColumnChart.getSortableRoles(visualSortableOptions),
     };
 
+    export let villageChart: IVisualPlugin = {
+        name: "villageChart",
+        capabilities: VillageChart.capabilities,
+        create: () => new VillageChart()
+    };
+
 }
