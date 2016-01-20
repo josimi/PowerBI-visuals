@@ -67,7 +67,6 @@ module powerbi.visuals {
 
     export interface VillageSettings {
         genders: boolean;
-        shuffle: boolean;
         population: number;
     }
 
@@ -113,7 +112,7 @@ module powerbi.visuals {
             this.legend.drawLegend(village.legend, options.viewport);
 
             var legendOffset: number = this.legend.getMargins().height;
-            var viewHeight: number = options.viewport.height; // - legendOffset;
+            var viewHeight: number = options.viewport.height;
 
             var rectWidths: number[] = VillageChart.divisors(numberOfPeople);
 
@@ -163,7 +162,7 @@ module powerbi.visuals {
             var stepWidth: number = (options.viewport.width / plotWidth);
             var stepHeight: number = 1.1 * (stepWidth / 0.4);
 
-            var plot: D3.Selection = this.svg.append("g"); //.attr("transform", "translate(0, " + legendOffset.toString() + ")");
+            var plot: D3.Selection = this.svg.append("g");
 
             var i: number = 0;
             for (var y: number = 0; y < plotHeight; y++) {
@@ -222,7 +221,6 @@ module powerbi.visuals {
 
                     if (general) {
                         settings.genders = <boolean>general['genders'];
-                        settings.shuffle = <boolean>general['shuffle'];
                         settings.population = <number>general['population'];
                     }
                 }
@@ -322,13 +320,9 @@ module powerbi.visuals {
                 dataPoints: legendPoints
             };
 
-            if (this.settings.shuffle) {
-                people = VillageChart.shuffle(people);
-            }
-
             var categories: string[] = new Array<string>(dataView.categorical.categories[0].values.length);
             for (var i: number = 0; i < categories.length; i++) {
-                categories[i] = dataView.categorical.categories[0].values[i];
+                categories[i] = dataView.categorical.categories[0].values[i].toString();
             }
 
             var measureName: string = dataView.categorical.values[0].source.displayName;
@@ -388,10 +382,6 @@ module powerbi.visuals {
                             type: { bool: true },
                             displayName: "Genders"
                         },
-                        shuffle: {
-                            type: { bool: true },
-                            displayName: "Shuffle"
-                        },
                         population: {
                             type: { numeric: true },
                             displayName: "Population"
@@ -416,7 +406,6 @@ module powerbi.visuals {
                         selector: null,
                         properties: {
                             genders: this.settings.genders,
-                            shuffle: this.settings.shuffle,
                             population: this.settings.population
                         }
                     };
@@ -436,23 +425,8 @@ module powerbi.visuals {
 
         private static DefaultVillageSettings: VillageSettings = {
             genders: false,
-            shuffle: false,
             population: 100
         };
-
-        private static shuffle<T>(a: Array<T>): Array<T> {
-            var r: Array<T> = new Array<T>(a.length);
-            for (var i: number = 0; i < r.length; i++) { r[i] = a[i]; }
-
-            for (var i: number = 0; i < r.length - 2; i++) {
-                var j: number = Math.random() * (r.length - i);
-                var temp: T = r[j];
-                r[j] = r[i];
-                r[i] = temp;
-            }
-
-            return r;
-        }
 
         private static primes: number[] = VillageChart.computePrimes();
 
