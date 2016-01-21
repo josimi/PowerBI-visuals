@@ -35,10 +35,12 @@ module powerbi.visuals {
         private _category: number;
         private _silhouette: number;
 
-        constructor(color: IColorInfo, category: number, silhouette: number) {
+        constructor(id: number, color: IColorInfo, category: number, silhouette: number, selectionId: SelectionId) {
+            this.id = id;
             this._color = color;
             this._category = category;
             this._silhouette = silhouette;
+            this.selectionId = selectionId;
         }
 
         public color(): IColorInfo {
@@ -53,6 +55,8 @@ module powerbi.visuals {
             return this._category;
         }
 
+        public id: number;
+        public selectionId: SelectionId;
         public x: number;
         public y: number;
     }
@@ -78,6 +82,7 @@ module powerbi.visuals {
         private settings: VillageSettings;
         private selectionManager: SelectionManager;
         private hostService: IVisualHostServices;
+        private plot: D3.Selection;
 
         public init(options: VisualInitOptions): void {
             this.hostService = options.host;
@@ -175,7 +180,7 @@ module powerbi.visuals {
             var stepWidth: number = (options.viewport.width / plotWidth);
             var stepHeight: number = 1.1 * (stepWidth / 0.4);
 
-            var plot: D3.Selection = this.svg.append("g");
+            this.plot = this.svg.append("g");
 
             var i: number = 0;
             for (var y: number = 0; y < plotHeight; y++) {
@@ -190,11 +195,15 @@ module powerbi.visuals {
                 }
             }
 
-            var selection: D3.UpdateSelection = plot.selectAll(".person").data(village.people);
+            var selection: D3.UpdateSelection = this.plot.selectAll(".person").data(village.people);
 
-            var person: D3.Selection = selection.enter().append("g").classed("person", true).attr("transform", (d: VillagePerson) => {
-                return "translate(" + d.x.toString() + ", " + d.y.toString() + ") scale(" + plotScale.toString() + ")";
-            });
+            var person: D3.Selection = selection.enter().append("g").classed("person", true)
+                .attr("id", (d: VillagePerson) => {
+                    return "person" + d.id.toString();
+                })
+                .attr("transform", (d: VillagePerson) => {
+                    return "translate(" + d.x.toString() + ", " + d.y.toString() + ") scale(" + plotScale.toString() + ")";
+                });
 
             person.append("ellipse").classed("head", true).style("fill", (d: VillagePerson) => {
                 return d.color().value;
@@ -218,6 +227,27 @@ module powerbi.visuals {
                 ];
 
                 return items;
+            });
+
+            person.selectAll("*").on("click", (d: VillagePerson, index: number) => {
+                this.selectionManager.select(d.selectionId).then((ids: SelectionId[]) => {
+                    if (ids.length == 0) {
+                        this.plot.selectAll(".person").selectAll("*").style("opacity", 1);
+                    } else {
+                        this.plot.selectAll(".person").selectAll("*").style("opacity", 0.25);
+
+                        ids.forEach((selectionId: SelectionId) => {
+                            for (var i: number = 0; i < village.people.length; i++) {
+                                if (village.people[i].selectionId.equals(selectionId)) {
+                                    this.plot.select("#person" + village.people[i].id.toString())
+                                        .selectAll("*").style("opacity", 1);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                
             });
 
             selection.exit();
@@ -299,8 +329,18 @@ module powerbi.visuals {
                 clampedSum += d;
             }
 
+            var selectionIds = new Array(dataView.categorical.categories[0].values.length);
+            for (var i: number = 0; i < dataView.categorical.categories[0].values.length; i++) {
+                var selectionId: SelectionId = SelectionIdBuilder.builder()
+                    .withCategory(dataView.categorical.categories[0], i)
+                    .createSelectionId();
+
+                selectionIds[i] = selectionId;
+            }
+
             var people: VillagePerson[] = new Array<VillagePerson>();
 
+            var i: number = 0;
             for (var x: number = 0; x < totals.length; x++) {
                 for (var y: number = 0; y < totals[x].count; y++) {
                     var bodyType: number = 0;
@@ -312,7 +352,13 @@ module powerbi.visuals {
                         }
                     }
 
-                    people.push(new VillagePerson(colors.getColorByIndex(totals[x].category), totals[x].category, bodyType));
+                    people.push(new VillagePerson(
+                        i++,
+                        colors.getColorByIndex(totals[x].category),
+                        totals[x].category,
+                        bodyType,
+                        selectionIds[totals[x].category]
+                    ));
                 }
             }
 
@@ -351,11 +397,6 @@ module powerbi.visuals {
 
             return { people: people, legend: legendData, categories: categories, measureName: measureName, measures: measures };
         }
-
-        private static heads = [
-            { cx: 18.616354, cy: 7.5532413, rx: 6.9148936, ry: 7.4468584 },
-            { cx: 18.616354, cy: 7.5532413, rx: 6.9148936, ry: 7.4468584 }
-        ]
 
         private static bodies: string[] = [
             "m 0.10675269,16.484485 0,41.851844 0.16796873,0.177735 C 2.975746,63.745619 6.2017399,59.833362 7.8528462,58.351953 l 0,-14.152438 0.015625,14.138767 c -0.00418,0.0037 -0.011421,0.0099 -0.015625,0.01367 l 0,41.541295 8.9179688,0 0,-37.025639 1.892578,0 1.798829,0 0,37.025639 8.917968,0 0,-41.295199 c -0.06451,-0.08875 0.07043,-0.141851 0.0055,-0.235717 l -0.0055,-14.162817 0,14.398534 c 3.091008,4.252201 5.721613,2.695195 7.746094,-0.26172 l 0,-41.851844 -14.087891,0 -8.84375,0 z",
@@ -428,12 +469,6 @@ module powerbi.visuals {
             }
 
             return instances;
-        }
-
-        private setSelection(columns: D3.UpdateSelection, selectSecondSeries: boolean = false): void {
-            var selectionIds: SelectionId[] = this.selectionManager.getSelectionIds();
-
-            console.log(selectionIds);
         }
 
         private static DefaultVillageSettings: VillageSettings = {
