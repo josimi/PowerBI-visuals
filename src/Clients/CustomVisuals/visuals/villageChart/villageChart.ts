@@ -220,11 +220,12 @@ module powerbi.visuals {
 
                 var items: TooltipDataItem[] = [
                     {
-                        header: village.categories[data.category()],
                         displayName: village.measureName,
                         value: village.measures[data.category()]
                     }
                 ];
+
+                items[0].header = village.categories[data.category()];
 
                 return items;
             });
@@ -272,9 +273,11 @@ module powerbi.visuals {
             return settings;
         }
 
-        private static nextSeededRandom(seed: number) {
-            var r: number = Math.sin(seed) * 10000;
-            return r - Math.floor(r);
+        private seed: number;
+        private nextSeededRandom() {
+            var r: number = Math.sin(this.seed) * 10000;
+            this.seed = r - Math.floor(r);
+            return this.seed;
         }
 
         public converter(dataView: DataView, colors: IDataColorPalette, clamp: number): VillageData {
@@ -288,7 +291,7 @@ module powerbi.visuals {
             }
 
             var sum: number = dataView.categorical.values[0].values.reduce((v, u) => u + v);
-            var seed: number = VillageChart.nextSeededRandom(sum);
+            this.seed = sum;
             var totals = [];
             var clampedSum: number = 0;
 
@@ -346,8 +349,8 @@ module powerbi.visuals {
                     var bodyType: number = 0;
 
                     if (this.settings.genders) {
-                        seed = VillageChart.nextSeededRandom(seed);
-                        if (seed > 0.5) {
+                        var r = this.nextSeededRandom();
+                        if (r > 0.5) {
                             bodyType = 1;
                         }
                     }
@@ -381,7 +384,7 @@ module powerbi.visuals {
 
             var categories: string[] = new Array<string>(dataView.categorical.categories[0].values.length);
             for (var i: number = 0; i < categories.length; i++) {
-                categories[i] = dataView.categorical.categories[0].values[i].toString();
+                categories[i] = dataView.categorical.categories[0].values[i];
             }
 
             var measureName: string = dataView.categorical.values[0].source.displayName;
