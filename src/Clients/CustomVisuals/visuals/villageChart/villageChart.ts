@@ -111,23 +111,36 @@ module powerbi.visuals {
             this.legend.changeOrientation(LegendPosition.Top);
             this.legend.drawLegend(village.legend, options.viewport);
 
-            var legendOffset: number = this.legend.getMargins().height;
             var viewHeight: number = options.viewport.height;
-
-            var rectWidths: number[] = VillageChart.divisors(numberOfPeople);
 
             var bestFill: number = -1;
             var bestWidth: number;
             var bestScale: number;
 
             if (VillageChart.primes.indexOf(numberOfPeople) == -1) {
+                var rectWidths: number[] = VillageChart.divisors(numberOfPeople);
+
                 for (var i: number = 0; i < rectWidths.length; i++) {
                     var rectWidth: number = rectWidths[i];
                     var rectHeight: number = numberOfPeople / rectWidth;
 
                     var scale: number = options.viewport.width / (rectWidth * 40);
 
-                    if ((rectHeight * 110 * scale) < options.viewport.height) {
+                    if ((rectHeight * 110 * scale) < viewHeight) {
+                        var testArea: number = scale * (rectWidth * 40) * (rectHeight * 110);
+
+                        var p: number = testArea / (options.viewport.width * viewHeight);
+
+                        if (p < 1 && p >= 0.8 && p > bestFill) {
+                            bestFill = p;
+                            bestWidth = rectWidth;
+                            bestScale = scale;
+                        }
+                    }
+
+                    scale = viewHeight / (rectHeight * 110);
+
+                    if ((rectWidth * 40 * scale) < options.viewport.width) {
                         var testArea: number = scale * (rectWidth * 40) * (rectHeight * 110);
 
                         var p: number = testArea / (options.viewport.width * viewHeight);
