@@ -40,26 +40,19 @@ module powerbi.visuals {
     }
 
     class EventPoint {
-        public title: string;
         public x: number;
         public y: number;
         public category: number;
         public magnitude: number;
         public date: Date;
 
-        constructor(title: string, x: number, category: number, magnitude: number, date: Date) {
-            this.title = title;
+        constructor(x: number, category: number, magnitude: number, date: Date) {
             this.x = x;
             this.category = category;
             this.magnitude = magnitude;
             this.date = date;
 
             var seed: number = x + magnitude;
-            if (title != null) {
-                for (var i: number = 0; i < title.length; i++) {
-                    seed += title.charCodeAt(i);
-                }
-            }
 
             var r: number = Math.sin(seed) * 10000;
             r = r - Math.floor(r);
@@ -106,7 +99,6 @@ module powerbi.visuals {
 
             var groups = data.categories[1].values;
             var dates: Date[] = data.categories[0].values;
-            var titles: string[];
             var magnitudes: number[];
 
             this.streamsHeight = options.viewport.height - this.heightLegend - this.heightAxis;
@@ -115,7 +107,6 @@ module powerbi.visuals {
             this.dateTitle = data.categories[0].source.displayName;
 
             this.hasMagnitudes = !!data.values[0];
-            this.hasTitles = !!data.values[1];
 
             this.showPebbles = settings.pebbles;
 
@@ -127,10 +118,6 @@ module powerbi.visuals {
                 dataPoints: [],
                 title: data.categories[1].source.displayName
             };
-
-            if (this.hasTitles) {
-                titles = data.values[1].values;
-            }
 
             if (this.hasMagnitudes) {
                 magnitudes = data.values[0].values;
@@ -220,12 +207,7 @@ module powerbi.visuals {
                 if (this.showPebbles) {
                     var rx: number = (dateTime - minDate) / (maxDate - minDate);
 
-                    var t: string = null;
-                    if (this.hasTitles) {
-                        t = titles[i];
-                    }
-
-                    this.eventPoints.push(new EventPoint(t, rx, ci, m, dates[i]));
+                    this.eventPoints.push(new EventPoint(rx, ci, m, dates[i]));
                 }
 
                 if (this.chartMagnitudes) {
@@ -458,9 +440,6 @@ module powerbi.visuals {
                             }
                         ];
 
-                        if (this.viewModel.hasTitles) {
-                            items[0].header = data.title;
-                        }
                         if (this.viewModel.hasMagnitudes) {
                             items.push({
                                 displayName: this.viewModel.magnitudeTitle,
@@ -527,15 +506,10 @@ module powerbi.visuals {
                     name: "Y",
                     kind: VisualDataRoleKind.Measure,
                     displayName: data.createDisplayNameGetter("Role_DisplayName_Value")
-                }, {
-                    name: "Title",
-                    kind: VisualDataRoleKind.Measure,
-                    displayName: "Title"
                 }],
             dataViewMappings: [{
                 conditions: [
-                    { "Date": { min: 0, max: 1 }, "Category": { min: 0, max: 1 }, "Y": { min: 0, max: 1 }, "Title": { min: 0, max: 0 } },
-                    { "Date": { min: 0, max: 1 }, "Category": { min: 0, max: 1 }, "Y": { min: 0, max: 1 }, "Title": { min: 1, max: 1 } }
+                    { "Date": { min: 0, max: 1 }, "Category": { min: 0, max: 1 }, "Y": { min: 0, max: 1 } }
                 ],
                 categorical: {
                     categories: {
@@ -545,8 +519,7 @@ module powerbi.visuals {
                     values: {
                         select: [
                             { bind: { to: 'Category' } },
-                            { bind: { to: 'Y' } },
-                            { bind: { to: 'Title' } }
+                            { bind: { to: 'Y' } }
                         ]
                     }
                 }
