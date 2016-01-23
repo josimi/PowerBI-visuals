@@ -146,4 +146,9 @@ module powerbi.visuals.plugins {
         create: () => new VillageChart()
     };
 
+    export let relativeVelocity: IVisualPlugin = {
+        name: "relativeVelocity",
+        capabilities: RelativeVelocity.capabilities,
+        create: () => new RelativeVelocity()
+    };
 }

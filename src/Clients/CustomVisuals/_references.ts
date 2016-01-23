@@ -49,5 +49,6 @@
 /// <reference path="visuals/forceGraph/forceGraph.ts" />
 /// <reference path="visuals/mekkoChart/mekkoChart.ts" />
 /// <reference path="visuals/villageChart/villageChart.ts" />
+/// <reference path="visuals/relativeVelocity/relativeVelocity.ts" />
 
 /// <reference path="plugins.ts" />
