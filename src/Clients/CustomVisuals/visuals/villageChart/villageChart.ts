@@ -254,6 +254,17 @@ module powerbi.visuals {
             selection.exit();
         }
 
+        public destroy(): void {
+            this.svg = null;
+            this.colors = null;
+            this.legend = null;
+            this.dataView = null;
+            this.settings = null;
+            this.selectionManager = null;
+            this.hostService = null;
+            this.plot = null;
+        }
+
         private parseSettings(dataView: DataView): VillageSettings {
             var settings: VillageSettings = VillageChart.DefaultVillageSettings;
 
