@@ -300,6 +300,17 @@ module powerbi.visuals {
                 .call(axis);
         }
 
+        public destroy(): void {
+            this.svg = null;
+            this.gStreams = null;
+            this.legendDiv = null;
+            this.colors = null;
+            this.viewModel = null;
+            this.dataView = null;
+            this.legend = null;
+            this.settings = null;
+        }
+
         private parseSettings(dataView: DataView): VelocitySettings {
             var settings: VelocitySettings = RelativeVelocity.DefaultVelocitySettings;
 
